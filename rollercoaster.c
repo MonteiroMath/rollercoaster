@@ -19,29 +19,35 @@ void *passengerThreadFunc(void *arg)
 
     printf("Passenger %d created\n", t_id);
 
-    // esperar na fila
-    sem_wait(&queue);
-
-    // esperar checkin
-    sem_wait(&checkin);
-    // incremententar contador
-    printf("Passenger %d entered the car\n", t_id);
-    count++;
-    // if count == maximum - signal boarding
-
-    if (count == carCapacity)
+    while (1)
     {
-        printf("Maximum car capacity reached\n");
-        sem_post(&boarding);
-    }
+        // esperar na fila
+        sem_wait(&queue);
 
-    //  signal checkin
-    sem_post(&checkin);
-    // esperar riding
-    sem_wait(&riding);
-    // signal unboarding
-    printf("Passenger %d leaving the car\n", t_id);
-    sem_post(&unboarding);
+        // esperar checkin
+        sem_wait(&checkin);
+        // incremententar contador
+        printf("Passenger %d entered the car\n", t_id);
+        count++;
+        // if count == maximum - signal boarding
+
+        if (count == carCapacity)
+        {
+            printf("Maximum car capacity reached\n");
+            sem_post(&boarding);
+        }
+
+        //  signal checkin
+        sem_post(&checkin);
+        // esperar riding
+        sem_wait(&riding);
+        // signal unboarding
+        printf("Passenger %d leaving the car\n", t_id);
+        sem_post(&unboarding);
+
+        printf("Passenger %d is going for a walk in the park\n", t_id);
+        sleep(rand() % 5);
+    }
 }
 
 void *carThreadFunc()
@@ -78,6 +84,8 @@ void *carThreadFunc()
             sem_wait(&unboarding);
         }
     }
+
+    printf("Car reached the maximum rides for the day and is closing down.\n");
 }
 
 int main(int argc, char **argv)
@@ -114,11 +122,12 @@ int main(int argc, char **argv)
 
     pthread_create(&carThread, NULL, carThreadFunc, NULL);
 
+    pthread_join(carThread, NULL);
+
     for (i = 1; i < numPassengers; i++)
     {
-        pthread_join(passengerThreads[i], NULL);
+        pthread_cancel(passengerThreads[i]);
     }
-    pthread_join(carThread, NULL);
 
     sem_destroy(&queue);
     sem_destroy(&checkin);
