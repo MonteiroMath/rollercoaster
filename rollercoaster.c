@@ -11,42 +11,42 @@ sem_t riding;
 sem_t unboarding;
 int count = 0;
 
-void passengerThreadFunc(void *arg)
+void *passengerThreadFunc(void *arg)
 {
 
     int t_id = *((int *)arg);
 
-    printf("Passenger %d created", t_id);
+    printf("Passenger %d created\n", t_id);
     // esperar na fila
+    // sem_wait(&queue);
+
     // esperar checkin
+    // sem_wait(&checkin);
     // incremententar contador
     // if count == maximum - signal boarding
     //  signal checkin
     // esperar riding
     // signal unboarding
-    return;
 }
 
-void carThreadFunc(void *arg)
+void *carThreadFunc()
 {
 
-    printf("Car created");
+    printf("Car created\n");
     // para cada ride, sinalizar a fila n vezes (quantidade de passageiros aceitos)
     // esperar boarding
     //  zerar contador
     // ride
     // para cada passageiro, sinalizar riding
     // esperar unboarding
-
-    return;
 }
 
 int main(int argc, char **argv)
 {
 
-    int numPassengers, carCapacity, maxRides, i;
-    int ids[numPassengers];
-    pthread_t passengerThreads[numPassengers];
+    int numPassengers, carCapacity, maxRides;
+    int i = 0;
+
     pthread_t carThread;
 
     sem_init(&queue, 0, 0);
@@ -55,9 +55,9 @@ int main(int argc, char **argv)
     sem_init(&riding, 0, 0);
     sem_init(&unboarding, 0, 0);
 
-    if (argc != 3)
+    if (argc != 4)
     {
-        printf("Digite %s Num_arrays Num_elementos\n", argv[0]);
+        printf("Digite %s numPassengers carCapacity maxRides\n", argv[0]);
         exit(0);
     }
 
@@ -65,15 +65,18 @@ int main(int argc, char **argv)
     carCapacity = atoi(argv[2]);
     maxRides = atoi(argv[3]);
 
-    for (i = 0; i < numPassengers; i++)
+    int ids[numPassengers];
+    pthread_t passengerThreads[numPassengers];
+
+    for (i = 1; i <= numPassengers; i++)
     {
-        ids[i] = i - 1;
+        ids[i] = i;
         pthread_create(&passengerThreads[i], NULL, passengerThreadFunc, &ids[i]);
     }
 
     pthread_create(&carThread, NULL, carThreadFunc, NULL);
 
-    for (i = 0; i < numPassengers; i++)
+    for (i = 1; i < numPassengers; i++)
     {
         pthread_join(passengerThreads[i], NULL);
     }
