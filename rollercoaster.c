@@ -15,30 +15,76 @@ void *passengerThreadFunc(void *arg)
 {
 
     int t_id = *((int *)arg);
+    int maxCapacity = 5; // todo struct to receive maxCapacity as arg
 
     printf("Passenger %d created\n", t_id);
+
     // esperar na fila
-    // sem_wait(&queue);
+    sem_wait(&queue);
 
     // esperar checkin
-    // sem_wait(&checkin);
+    sem_wait(&checkin);
     // incremententar contador
+    printf("Passenger %d entered the car\n", t_id);
+    count++;
     // if count == maximum - signal boarding
+
+    if (count == maxCapacity)
+    {
+        printf("Maximum car capacity reached\n");
+        sem_post(&boarding);
+    }
+
     //  signal checkin
+    sem_post(&checkin);
     // esperar riding
+    sem_wait(&riding);
     // signal unboarding
+    printf("Passenger %d leaving the car\n", t_id);
+    sem_post(&unboarding);
+
+
+
 }
 
 void *carThreadFunc()
 {
 
+    // todo struct to receive args
+    int maxRides = 2;
+    int carCapacity = 5;
+
     printf("Car created\n");
     // para cada ride, sinalizar a fila n vezes (quantidade de passageiros aceitos)
-    // esperar boarding
-    //  zerar contador
-    // ride
-    // para cada passageiro, sinalizar riding
-    // esperar unboarding
+
+    for (int i = 0; i < maxRides; i++)
+    {
+
+        printf("Releasing queue\n");
+        for (int j = 0; j < carCapacity; j++)
+        {
+            sem_post(&queue);
+        }
+
+        // esperar boarding
+        sem_wait(&boarding);
+
+        //  zerar contador
+        count = 0;
+        // ride
+        printf("Car is riding\n");
+        sleep(2);
+        printf("Car finished riding\n");
+
+        printf("Initializing the unboarding\n");
+        for (int j = 0; j < carCapacity; j++)
+        {
+            // para cada passageiro, sinalizar riding
+            sem_post(&riding);
+            // esperar unboarding
+            sem_wait(&unboarding);
+        }
+    }
 }
 
 int main(int argc, char **argv)
@@ -76,11 +122,12 @@ int main(int argc, char **argv)
 
     pthread_create(&carThread, NULL, carThreadFunc, NULL);
 
-    for (i = 1; i < numPassengers; i++)
+   for (i = 1; i < numPassengers; i++)
     {
         pthread_join(passengerThreads[i], NULL);
-    }
+    } 
     pthread_join(carThread, NULL);
+
 
     sem_destroy(&queue);
     sem_destroy(&checkin);
