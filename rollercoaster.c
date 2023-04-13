@@ -10,12 +10,12 @@ sem_t boarding;
 sem_t riding;
 sem_t unboarding;
 int count = 0;
+int numPassengers, carCapacity, maxRides;
 
 void *passengerThreadFunc(void *arg)
 {
 
     int t_id = *((int *)arg);
-    int maxCapacity = 5; // todo struct to receive maxCapacity as arg
 
     printf("Passenger %d created\n", t_id);
 
@@ -29,7 +29,7 @@ void *passengerThreadFunc(void *arg)
     count++;
     // if count == maximum - signal boarding
 
-    if (count == maxCapacity)
+    if (count == carCapacity)
     {
         printf("Maximum car capacity reached\n");
         sem_post(&boarding);
@@ -42,17 +42,10 @@ void *passengerThreadFunc(void *arg)
     // signal unboarding
     printf("Passenger %d leaving the car\n", t_id);
     sem_post(&unboarding);
-
-
-
 }
 
 void *carThreadFunc()
 {
-
-    // todo struct to receive args
-    int maxRides = 2;
-    int carCapacity = 5;
 
     printf("Car created\n");
     // para cada ride, sinalizar a fila n vezes (quantidade de passageiros aceitos)
@@ -90,7 +83,6 @@ void *carThreadFunc()
 int main(int argc, char **argv)
 {
 
-    int numPassengers, carCapacity, maxRides;
     int i = 0;
 
     pthread_t carThread;
@@ -122,12 +114,11 @@ int main(int argc, char **argv)
 
     pthread_create(&carThread, NULL, carThreadFunc, NULL);
 
-   for (i = 1; i < numPassengers; i++)
+    for (i = 1; i < numPassengers; i++)
     {
         pthread_join(passengerThreads[i], NULL);
-    } 
+    }
     pthread_join(carThread, NULL);
-
 
     sem_destroy(&queue);
     sem_destroy(&checkin);
