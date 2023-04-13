@@ -73,5 +73,17 @@ int main(int argc, char **argv)
 
     pthread_create(&carThread, NULL, carThreadFunc, NULL);
 
-    // targs[i] = (t_args *)malloc(sizeof(t_args));
+    for (i = 0; i < numPassengers; i++)
+    {
+        pthread_join(passengerThreads[i], NULL);
+    }
+    pthread_join(carThread, NULL);
+
+    sem_destroy(&queue);
+    sem_destroy(&checkin);
+    sem_destroy(&boarding);
+    sem_destroy(&riding);
+    sem_destroy(&unboarding);
+
+    return 0;
 }
