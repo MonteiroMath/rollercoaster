@@ -5,7 +5,7 @@
 #include <semaphore.h>
 
 sem_t queue;
-sem_t checkin;
+pthread_mutex_t checkin;
 sem_t boarding;
 sem_t riding;
 sem_t unboarding;
@@ -25,7 +25,7 @@ void *passengerThreadFunc(void *arg)
         sem_wait(&queue);
 
         // esperar checkin
-        sem_wait(&checkin);
+        pthread_mutex_lock(&checkin);
         // incremententar contador
         printf("Passenger %d entered the car\n", t_id);
         count++;
@@ -38,7 +38,7 @@ void *passengerThreadFunc(void *arg)
         }
 
         //  signal checkin
-        sem_post(&checkin);
+        pthread_mutex_unlock(&checkin);
         // esperar riding
         sem_wait(&riding);
         // signal unboarding
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     pthread_t carThread;
 
     sem_init(&queue, 0, 0);
-    sem_init(&checkin, 0, 1);
+    pthread_mutex_init(&checkin, NULL);
     sem_init(&boarding, 0, 0);
     sem_init(&riding, 0, 0);
     sem_init(&unboarding, 0, 0);
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     }
 
     sem_destroy(&queue);
-    sem_destroy(&checkin);
+    pthread_mutex_destroy(&checkin);
     sem_destroy(&boarding);
     sem_destroy(&riding);
     sem_destroy(&unboarding);
